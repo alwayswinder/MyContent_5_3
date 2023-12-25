@@ -8,7 +8,7 @@
 #include "MyProceduralMeshActor.generated.h"
 
 UCLASS()
-class MYCONTENTSHOW_API AMyProceduralMeshActor : public AActor
+class  AMyProceduralMeshActor : public AActor
 {
 	GENERATED_BODY()
 
@@ -24,13 +24,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Íø¸ñ´óÐ¡
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	FVector2D GridSize = FVector2D(1000, 1000);
-	// X Öá¶¥µãÊýÁ¿
+	// X ï¿½á¶¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	int32 Sublevel_X = 10;
-	// Y Öá¶¥µãÊýÁ¿
+	// Y ï¿½á¶¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	int32 Sublevel_Y = 10;
 

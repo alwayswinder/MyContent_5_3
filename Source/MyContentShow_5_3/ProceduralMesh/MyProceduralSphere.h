@@ -8,7 +8,7 @@
 #include "MyProceduralSphere.generated.h"
 
 UCLASS()
-class MYCONTENTSHOW_API AMyProceduralSphere : public AActor
+class  AMyProceduralSphere : public AActor
 {
 	GENERATED_BODY()
 
@@ -27,10 +27,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	FRotator FaceRotation;
 	
-	// 网格大小
+	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	float GridSize = 1000;
-	// X 轴顶点数量
+	// 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	int32 Sublevel = 10;
 
