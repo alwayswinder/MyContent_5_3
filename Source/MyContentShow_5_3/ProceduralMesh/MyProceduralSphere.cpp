@@ -30,18 +30,26 @@ void AMyProceduralSphere::GenerateMesh()
 	if (GridSize <= 0 || Sublevel < 1) return;
 	Mesh->ClearAllMeshSections();
 
-	// Mesh buffers
-	TArray<FVector> vertices;
-	TArray<int32> triangles;
-	TArray<FVector> normals;
-	TArray<FVector2D> UV0;
-	TArray<FProcMeshTangent> tangents;
-	TArray<FColor> vertexColors;
-
-	GenerateSphereFace(vertices, triangles, normals, UV0, vertexColors);
-	Mesh->CreateMeshSection(0, vertices, triangles, normals, UV0, vertexColors, tangents, true);
-	Mesh->SetMaterial(0, Material);
-	//Mesh->CreateMeshSection_LinearColor(0, vertices, triangles, normals, UV0, vertexColors, tangents, true, false);
+	TArray<FRotator> Rotators = {FRotator(0, 0, 0),
+								FRotator(0, 0, 90),
+								FRotator(0, 0, -90),
+								FRotator(90, 0, 0),
+								FRotator(-90, 0, 0),
+								FRotator(0, 0, 180)};
+	for (int i=0; i<6; i++)
+	{
+		// Mesh buffers
+		TArray<FVector> vertices;
+		TArray<int32> triangles;
+		TArray<FVector> normals;
+		TArray<FVector2D> UV0;
+		TArray<FProcMeshTangent> tangents;
+		TArray<FColor> vertexColors;
+		
+		GenerateSphereFace(vertices, triangles, normals, UV0, vertexColors, Rotators[i]);
+		Mesh->CreateMeshSection(i, vertices, triangles, normals, UV0, vertexColors, tangents, true);
+		Mesh->SetMaterial(i, Material);
+	}
 }
 
 void AMyProceduralSphere::GenerateSphereFace(
@@ -49,7 +57,8 @@ void AMyProceduralSphere::GenerateSphereFace(
 	TArray<int32>& InTriangles,
 	TArray<FVector>& InNormals, 
 	TArray<FVector2D>& InUV0, 
-	TArray<FColor>& InVertexColor)
+	TArray<FColor>& InVertexColor,
+	FRotator Rot)
 {
 	int32 VertexIndex = 0;
 	TMap<FVector2d, FVector> PosSave;
@@ -57,7 +66,7 @@ void AMyProceduralSphere::GenerateSphereFace(
 	{
 		for (int Y = -1; Y < Sublevel + 2; Y++)
 		{
-			PosSave.Add(FVector2d(X, Y), GetSpherePosFromXY(X, Y));
+			PosSave.Add(FVector2d(X, Y), GetSpherePosFromXY(X, Y, Rot));
 		}
 	}
 	
@@ -127,14 +136,12 @@ void AMyProceduralSphere::GenerateSphereFace(
 			}
 			FVector NormalResult = NormalSum / vers.Num();
 			NormalResult.Normalize();
-			FVector pos = InVertices[c];
-			pos.Normalize();
 			InNormals.Add(NormalResult);
 		}
 	}
 }
 
-FVector AMyProceduralSphere::GetSpherePosFromXY(int32 X, int32 Y)
+FVector AMyProceduralSphere::GetSpherePosFromXY(int32 X, int32 Y, FRotator Rot)
 {
 	//归一化平面坐标
 	FVector PosPlane = FVector((X*1.f)/Sublevel*2.f-1.f, (Y*1.f)/Sublevel*2.f-1.f, 1.f);
@@ -149,7 +156,7 @@ FVector AMyProceduralSphere::GetSpherePosFromXY(int32 X, int32 Y)
 	FVector PosSphere = FVector(xp, yp, zp)*GridSize*0.5f;
 	
 	//旋转
-	PosSphere = FaceRotation.RotateVector(PosSphere);
+	PosSphere = Rot.RotateVector(PosSphere);
 
 	//Noise
 	USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed);

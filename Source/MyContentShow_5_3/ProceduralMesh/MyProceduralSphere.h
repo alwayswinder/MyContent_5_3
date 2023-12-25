@@ -24,9 +24,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
-	FRotator FaceRotation;
-	
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	float GridSize = 1000;
@@ -52,7 +49,7 @@ public:
 	
 	UFUNCTION()
 	void GenerateSphereFace(TArray<FVector>& InVertices, TArray<int32>& InTriangles, TArray<FVector>& InNormals,
-		TArray<FVector2D>& InUV0, TArray<FColor>& InVertexColor);
+		TArray<FVector2D>& InUV0, TArray<FColor>& InVertexColor, FRotator Rot);
 private:
-	FVector GetSpherePosFromXY(int32 x, int32 y);
+	FVector GetSpherePosFromXY(int32 x, int32 y, FRotator Rot);
 };
