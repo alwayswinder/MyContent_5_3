@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include "Curves/CurveVector.h"
 #include "MyProceduralMeshActor.generated.h"
 
 UCLASS()
@@ -24,23 +25,47 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// �����С
+	// 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	FVector2D GridSize = FVector2D(1000, 1000);
-	// X �ᶥ������
+	// X 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	int32 Sublevel_X = 10;
-	// Y �ᶥ������
+	// Y 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	int32 Sublevel_Y = 10;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	int32 NoiseSeed = 7777;
+	bool Enable_Mountain = false;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	float NoiseScale = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (UIMin = "0.00001", UIMax = "0.1"), Category = "Noise")
-	float NoiseFactor = 0.1f;
+	int32 NoiseSeed_Mountain = 7777;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	float NoiseHeight_Mountain = 1000;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	float NoiseFrequency_Mountain = 0.01f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	FRuntimeVectorCurve NoiseDistribution_Mountain;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	bool Enable_Lake= false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	int32 NoiseSeed_Lake = 7777;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	float NoiseHeight_Lake = 1000;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	float NoiseFrequency_Lake = 0.01f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
+	FRuntimeVectorCurve NoiseDistribution_Lake;
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	UMaterialInterface* Material;
 
@@ -50,7 +75,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GenerateMesh();
 	UFUNCTION()
-	void GenerateGrid(TArray<FVector>& InVertices, TArray<int32>& InTriangles, TArray<FVector>& InNormals, TArray<FVector2D>& InUV0, TArray<FColor>& InVertexColor, TArray<float>InNoiseHeight, FVector2D InSize, int32 InLength, int32 InWidth);
+	void GenerateGrid(TArray<FVector>& InVertices, TArray<int32>& InTriangles, TArray<FVector>& InNormals,
+		TArray<FVector2D>& InUV0, TArray<FColor>& InVertexColor);
 private:
-	void GetHeights(TArray<float>& InHeights);
+	TMap<FVector2d, FVector>  GetPlanePosFromXY();
+
 };

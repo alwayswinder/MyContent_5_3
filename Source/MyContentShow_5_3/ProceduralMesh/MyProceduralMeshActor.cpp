@@ -38,10 +38,7 @@ void AMyProceduralMeshActor::GenerateMesh()
 	TArray<FProcMeshTangent> tangents;
 	TArray<FColor> vertexColors;
 
-	TArray<float> heights;
-	GetHeights(heights);
-
-	GenerateGrid(vertices, triangles, normals, UV0, vertexColors, heights, GridSize, Sublevel_X, Sublevel_Y);
+	GenerateGrid(vertices, triangles, normals, UV0, vertexColors);
 	Mesh->CreateMeshSection(0, vertices, triangles, normals, UV0, vertexColors, tangents, true);
 	Mesh->SetMaterial(0, Material);
 	//Mesh->CreateMeshSection_LinearColor(0, vertices, triangles, normals, UV0, vertexColors, tangents, true, false);
@@ -52,34 +49,40 @@ void AMyProceduralMeshActor::GenerateGrid(
 	TArray<int32>& InTriangles,
 	TArray<FVector>& InNormals, 
 	TArray<FVector2D>& InUV0, 
-	TArray<FColor>& InVertexColor,
-	TArray<float> InNoiseHeight, 
-	FVector2D InSize, 
-	int32 InLength, 
-	int32 InWidth)
+	TArray<FColor>& InVertexColor)
 {
-	FVector2D SectionSize = FVector2D(InSize.X / InLength, InSize.Y / InWidth);
 	int32 VertexIndex = 0;
 
-	for (int X = 0; X < InLength + 1; X++)
+	TMap<FVector2d, FVector> PosPlanes = GetPlanePosFromXY();
+	for (int X = 0; X < Sublevel_X + 1; X++)
 	{
-		for (int Y = 0; Y < InWidth + 1; Y++)
+		for (int Y = 0; Y < Sublevel_Y + 1; Y++)
 		{
-			float z = VertexIndex < InNoiseHeight.Num() ? InNoiseHeight[VertexIndex] : 0;
-			FVector PosPlane = FVector(X * SectionSize.X, Y * SectionSize.Y, z * NoiseScale);
+			FVector PosPlane = PosPlanes[FVector2d(X, Y)];
 			InVertices.Add(PosPlane);
+
+			auto LerpColor = [](FColor A, FColor B, float T) -> FColor
+			{
+				return FColor(
+					FMath::RoundToInt(float(A.R) * (1.f - T) + float(B.R) * T),
+					FMath::RoundToInt(float(A.G) * (1.f - T) + float(B.G) * T),
+					FMath::RoundToInt(float(A.B) * (1.f - T) + float(B.B) * T),
+					FMath::RoundToInt(float(A.A) * (1.f - T) + float(B.A) * T));
+			};
+
+			FColor color = LerpColor(FColor::Black, FColor::White, PosPlane.Z/2000.f);
 			
-			FLinearColor color = FLinearColor(1, 0, 0, z);
-			InVertexColor.Add(color.ToFColor(true));
+			//FLinearColor color = FLinearColor(1, 0, 0, 1);
+			InVertexColor.Add(color);
 			// UV
-			FVector2D uv = FVector2D((float)X / (float)InLength, (float)Y / (float)InWidth);
+			FVector2D uv = FVector2D((float)X / (float)Sublevel_X, (float)Y / (float)Sublevel_Y);
 			InUV0.Add(uv);
 			// Once we've created enough verts we can start adding polygons
 			if (X > 0 && Y > 0)
 			{
-				int32 bTopRightIndex = (X * (InWidth + 1)) + Y;
+				int32 bTopRightIndex = (X * (Sublevel_Y + 1)) + Y;
 				int32 bTopLeftIndex = bTopRightIndex - 1;
-				int32 pBottomRightIndex = ((X - 1) * (InWidth + 1)) + Y;
+				int32 pBottomRightIndex = ((X - 1) * (Sublevel_Y + 1)) + Y;
 				int32 pBottomLeftIndex = pBottomRightIndex - 1;
 
 				// Now create two triangles from those four vertices
@@ -97,30 +100,30 @@ void AMyProceduralMeshActor::GenerateGrid(
 	}
 
 	// normal
-	for (int X = 0; X < InLength + 1; X++)
+	for (int X = 0; X < Sublevel_X + 1; X++)
 	{
-		for (int Y = 0; Y < InWidth + 1; Y++)
+		for (int Y = 0; Y < Sublevel_Y + 1; Y++)
 		{
-			int32 c = (X * (InWidth + 1)) + Y;
-			int32 centerUp = c + InWidth + 1;
-			int32 centerBottom = c - (InWidth + 1);
+			int32 c = (X * (Sublevel_Y + 1)) + Y;
+			int32 centerUp = c + Sublevel_Y + 1;
+			int32 centerBottom = c - (Sublevel_Y + 1);
 			int32 centerRight = c + 1;
-			if (centerRight > ((X * (InWidth + 1)) + InWidth))
+			if (centerRight > ((X * (Sublevel_Y + 1)) + Sublevel_Y))
 			{
 				centerRight = -1;
 			}
 			int32 centerLeft = c - 1;
-			if (centerLeft < (X * (InWidth + 1)))
+			if (centerLeft < (X * (Sublevel_Y + 1)))
 			{
 				centerLeft = -1;
 			}
 			int32 centerUpRight = centerUp + 1;
-			if (centerUpRight > (X + 1) * (InWidth + 1) + InWidth)
+			if (centerUpRight > (X + 1) * (Sublevel_Y + 1) + Sublevel_Y)
 			{
 				centerUpRight = -1;
 			}
 			int32 centerBottomLeft = centerBottom - 1;
-			if (centerBottomLeft < (X - 1) * (InWidth + 1))
+			if (centerBottomLeft < (X - 1) * (Sublevel_Y + 1))
 			{
 				centerBottomLeft = -1;
 			}
@@ -151,15 +154,44 @@ void AMyProceduralMeshActor::GenerateGrid(
 	}
 }
 
-void AMyProceduralMeshActor::GetHeights(TArray<float>& InHeights)
+TMap<FVector2d, FVector> AMyProceduralMeshActor::GetPlanePosFromXY()
 {
-	if (NoiseScale == 0) return;
-	USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed);
-	for (auto X = 0; X < Sublevel_X + 1; X++)
+	TMap<FVector2d, FVector> PosRet;
+	FVector2D SectionSize = FVector2D(GridSize.X / Sublevel_X, GridSize.Y / Sublevel_Y);
+
+	for (int X = 0; X < Sublevel_X + 1; X++)
 	{
-		for (auto Y = 0; Y < Sublevel_Y + 1; Y++)
+		for (int Y = 0; Y < Sublevel_Y + 1; Y++)
 		{
-			InHeights.Add(USimplexNoiseBPLibrary::SimplexNoise2D(X, Y, NoiseFactor));
+			float Height = 0;
+			if(Enable_Mountain)
+			{
+				USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed_Mountain);
+			
+				FVector PosPlane = FVector(X, Y, 1.f);
+				float PerlinValue = USimplexNoiseBPLibrary::SimplexNoise2D(X * 1.f / Sublevel_X, Y * 1.f / Sublevel_Y,
+					NoiseFrequency_Mountain) + 1;
+		
+				float NoiseDis_X =  NoiseDistribution_Mountain.GetValue(X * 1.f / Sublevel_X).X;
+				float NoiseDis_Y =  NoiseDistribution_Mountain.GetValue(Y * 1.f / Sublevel_X).Y;
+				Height += PerlinValue*NoiseHeight_Mountain*NoiseDis_X*NoiseDis_Y;
+			}
+			
+			if(Enable_Lake)
+			{
+				USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed_Lake);
+			
+				FVector PosPlane = FVector(X, Y, 1.f);
+				float PerlinValue = (USimplexNoiseBPLibrary::SimplexNoise2D(X * 1.f / Sublevel_X, Y * 1.f / Sublevel_Y,
+					NoiseFrequency_Lake) + 1) * -1;
+		
+				float NoiseDis_X =  NoiseDistribution_Lake.GetValue(X * 1.f / Sublevel_X).X;
+				float NoiseDis_Y =  NoiseDistribution_Lake.GetValue(Y * 1.f / Sublevel_X).Y;
+				Height += PerlinValue*NoiseHeight_Lake*NoiseDis_X*NoiseDis_Y;
+			}
+			
+			PosRet.Add(FVector2d(X, Y), FVector(X * SectionSize.X, Y*SectionSize.Y, Height));
 		}
 	}
+	return PosRet;
 }

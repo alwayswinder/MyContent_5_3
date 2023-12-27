@@ -153,17 +153,26 @@ FVector AMyProceduralSphere::GetSpherePosFromXY(int32 X, int32 Y, FRotator Rot)
 	float xp = PosPlane.X * sqrt(1-(y2+z2)/2 + (y2*z2)/3);
 	float yp = PosPlane.Y * sqrt(1-(z2+x2)/2 + (z2*x2)/3);
 	float zp = PosPlane.Z * sqrt(1-(x2+y2)/2 + (x2*y2)/3);
-	FVector PosSphere = FVector(xp, yp, zp)*GridSize*0.5f;
+	FVector PosSphere = FVector(xp, yp, zp);
 	
 	//旋转
 	PosSphere = Rot.RotateVector(PosSphere);
-
-	//Noise
-	USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed);
-	float Height = USimplexNoiseBPLibrary::SimplexNoise3D(PosSphere.X, PosSphere.Y, PosSphere.Z, NoiseFactor);
 	FVector Normal = PosSphere;
 	Normal.Normalize();
-	PosSphere += Height*NoiseScale*Normal;
+	float Height = 0.f;
 	
-	return PosSphere;
+	if(Enable_Mountain)
+	{
+		USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed_Mountain);
+		float PerlinValue = USimplexNoiseBPLibrary::SimplexNoise3D(PosSphere.X, PosSphere.Y, PosSphere.Z,
+			NoiseFrequency_Mountain) + 1;
+		//UE_LOG(LogTemp,Warning,TEXT("pos = %f, %f, %f"),PosSphere.X, PosSphere.Y, PosSphere.Z);
+		float NoiseDis_X =  NoiseDistribution_Mountain.GetValue(PosSphere.X).X;
+		float NoiseDis_Y =  NoiseDistribution_Mountain.GetValue(PosSphere.Y).Y;
+		float NoiseDis_Z =  NoiseDistribution_Mountain.GetValue(PosSphere.Z).Z;
+		
+		Height += PerlinValue*NoiseHeight_Mountain*NoiseDis_X*NoiseDis_Y*NoiseDis_Z;
+	}
+	
+	return PosSphere*GridSize*0.5f + Height*Normal;
 }
