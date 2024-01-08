@@ -42,13 +42,10 @@ public:
 	int32 NoiseSeed_Mountain = 7777;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	float NoiseHeight_Mountain = 1000;
+	float NoiseFrequency_Mountain = 1.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	float NoiseFrequency_Mountain = 0.01f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	FRuntimeVectorCurve NoiseDistribution_Mountain;
+	FRuntimeFloatCurve NoiseDistribution_Mountain;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
 	bool Enable_Lake= false;
@@ -57,13 +54,10 @@ public:
 	int32 NoiseSeed_Lake = 7777;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	float NoiseHeight_Lake = 1000;
+	float NoiseFrequency_Lake = 1.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	float NoiseFrequency_Lake = 0.01f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Noise")
-	FRuntimeVectorCurve NoiseDistribution_Lake;
+	FRuntimeFloatCurve NoiseDistribution_Lake;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")

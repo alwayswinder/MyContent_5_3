@@ -171,23 +171,16 @@ TMap<FVector2d, FVector> AMyProceduralMeshActor::GetPlanePosFromXY()
 				FVector PosPlane = FVector(X, Y, 1.f);
 				float PerlinValue = USimplexNoiseBPLibrary::SimplexNoise2D(X * 1.f / Sublevel_X, Y * 1.f / Sublevel_Y,
 					NoiseFrequency_Mountain) + 1;
-		
-				float NoiseDis_X =  NoiseDistribution_Mountain.GetValue(X * 1.f / Sublevel_X).X;
-				float NoiseDis_Y =  NoiseDistribution_Mountain.GetValue(Y * 1.f / Sublevel_X).Y;
-				Height += PerlinValue*NoiseHeight_Mountain*NoiseDis_X*NoiseDis_Y;
+				
+				//UE_LOG(LogTemp,Warning,TEXT("perlin = %f"), PerlinValue);
+
+				float NoiseDis_X =  NoiseDistribution_Mountain.GetRichCurve()->Eval(PerlinValue, 0);
+				Height += PerlinValue*NoiseDis_X;
 			}
 			
 			if(Enable_Lake)
 			{
-				USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed_Lake);
-			
-				FVector PosPlane = FVector(X, Y, 1.f);
-				float PerlinValue = (USimplexNoiseBPLibrary::SimplexNoise2D(X * 1.f / Sublevel_X, Y * 1.f / Sublevel_Y,
-					NoiseFrequency_Lake) + 1) * -1;
-		
-				float NoiseDis_X =  NoiseDistribution_Lake.GetValue(X * 1.f / Sublevel_X).X;
-				float NoiseDis_Y =  NoiseDistribution_Lake.GetValue(Y * 1.f / Sublevel_X).Y;
-				Height += PerlinValue*NoiseHeight_Lake*NoiseDis_X*NoiseDis_Y;
+				
 			}
 			
 			PosRet.Add(FVector2d(X, Y), FVector(X * SectionSize.X, Y*SectionSize.Y, Height));
