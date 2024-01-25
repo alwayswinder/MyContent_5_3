@@ -14,6 +14,7 @@ public class MyContentShow_5_3 : ModuleRules
 		{
 			"ProceduralMeshComponent",
 			"SimplexNoise",
+			"RenderCore",
 		});
 
 		// Uncomment if you are using Slate UI

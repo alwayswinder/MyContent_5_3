@@ -24,7 +24,9 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
+	FLinearColor ColorStart = FLinearColor::White;
 	// 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid Generate")
 	FVector2D GridSize = FVector2D(1000, 1000);
@@ -70,8 +72,19 @@ public:
 	void GenerateMesh();
 	UFUNCTION()
 	void GenerateGrid(TArray<FVector>& InVertices, TArray<int32>& InTriangles, TArray<FVector>& InNormals,
-		TArray<FVector2D>& InUV0, TArray<FColor>& InVertexColor);
-private:
-	TMap<FVector2d, FVector>  GetPlanePosFromXY();
+		TArray<FVector2D>& InUV0);
 
+	UFUNCTION(BlueprintCallable)
+	void PaintVertexColorWithRT(FLinearColor Color, UTextureRenderTarget2D* RT);
+private:
+	void CalculateVerticesPos();
+	void InitColor();
+	
+	TArray<FVector> vertices;
+	TArray<int32> triangles;
+	TArray<FVector> normals;
+	TArray<FVector2D> UV0;
+	TArray<FProcMeshTangent> tangents;
+	TArray<FColor> vertexColors;
+	TArray<FLinearColor> VertexLinearColors;
 };

@@ -2,6 +2,7 @@
 
 #include "MyProceduralMeshActor.h"
 #include "SimplexNoiseBPLibrary.h"
+#include "Engine/TextureRenderTarget2D.h"
 
 // Sets default values
 AMyProceduralMeshActor::AMyProceduralMeshActor()
@@ -31,49 +32,33 @@ void AMyProceduralMeshActor::GenerateMesh()
 	Mesh->ClearAllMeshSections();
 
 	// Mesh buffers
-	TArray<FVector> vertices;
-	TArray<int32> triangles;
-	TArray<FVector> normals;
-	TArray<FVector2D> UV0;
-	TArray<FProcMeshTangent> tangents;
-	TArray<FColor> vertexColors;
-
-	GenerateGrid(vertices, triangles, normals, UV0, vertexColors);
+	vertices.Empty();
+	triangles.Empty();
+	normals.Empty();
+	UV0.Empty();
+	tangents.Empty();
+	vertexColors.Empty();
+	
+	CalculateVerticesPos();
+	InitColor();
+	
+	GenerateGrid(vertices, triangles, normals, UV0);
 	Mesh->CreateMeshSection(0, vertices, triangles, normals, UV0, vertexColors, tangents, true);
 	Mesh->SetMaterial(0, Material);
-	//Mesh->CreateMeshSection_LinearColor(0, vertices, triangles, normals, UV0, vertexColors, tangents, true, false);
 }
 
 void AMyProceduralMeshActor::GenerateGrid(
 	TArray<FVector>& InVertices,
 	TArray<int32>& InTriangles,
 	TArray<FVector>& InNormals, 
-	TArray<FVector2D>& InUV0, 
-	TArray<FColor>& InVertexColor)
+	TArray<FVector2D>& InUV0)
 {
 	int32 VertexIndex = 0;
 
-	TMap<FVector2d, FVector> PosPlanes = GetPlanePosFromXY();
 	for (int X = 0; X < Sublevel_X + 1; X++)
 	{
 		for (int Y = 0; Y < Sublevel_Y + 1; Y++)
 		{
-			FVector PosPlane = PosPlanes[FVector2d(X, Y)];
-			InVertices.Add(PosPlane);
-
-			auto LerpColor = [](FColor A, FColor B, float T) -> FColor
-			{
-				return FColor(
-					FMath::RoundToInt(float(A.R) * (1.f - T) + float(B.R) * T),
-					FMath::RoundToInt(float(A.G) * (1.f - T) + float(B.G) * T),
-					FMath::RoundToInt(float(A.B) * (1.f - T) + float(B.B) * T),
-					FMath::RoundToInt(float(A.A) * (1.f - T) + float(B.A) * T));
-			};
-
-			FColor color = LerpColor(FColor::Black, FColor::White, PosPlane.Z/2000.f);
-			
-			//FLinearColor color = FLinearColor(1, 0, 0, 1);
-			InVertexColor.Add(color);
 			// UV
 			FVector2D uv = FVector2D((float)X / (float)Sublevel_X, (float)Y / (float)Sublevel_Y);
 			InUV0.Add(uv);
@@ -154,9 +139,44 @@ void AMyProceduralMeshActor::GenerateGrid(
 	}
 }
 
-TMap<FVector2d, FVector> AMyProceduralMeshActor::GetPlanePosFromXY()
+void AMyProceduralMeshActor::PaintVertexColorWithRT(FLinearColor Color, UTextureRenderTarget2D* RT)
 {
-	TMap<FVector2d, FVector> PosRet;
+	TArray<FColor> OutputBuffer;
+	if(RT)
+	{
+		FTextureRenderTargetResource* ResourceRt = RT->GameThread_GetRenderTargetResource();
+		if(ResourceRt)
+		{
+			ResourceRt->ReadPixels(OutputBuffer);
+			if(OutputBuffer.Num() == RT->SizeX * RT->SizeY)
+			{
+				for (int X = 0; X < Sublevel_X + 1; X++)
+				{
+					for (int Y = 0; Y < Sublevel_Y + 1; Y++)
+					{
+						int U = X * 1.f / (Sublevel_X + 1) * RT->SizeX + 0.5;
+						int V = Y * 1.f / (Sublevel_Y + 1) * RT->SizeY + 0.5;
+						if(OutputBuffer.IsValidIndex(V *RT->SizeY + U)
+							&&OutputBuffer[V *RT->SizeY + U].R > 0)
+						{
+							float lerpA = OutputBuffer[V *RT->SizeY + U].R / 255.f;
+							FLinearColor CurColor = VertexLinearColors[X*(Sublevel_X + 1) + Y];
+							
+							FLinearColor FillColor =  CurColor + lerpA *(Color - CurColor);
+							
+							VertexLinearColors[X*(Sublevel_X + 1) + Y] = FillColor;
+							//UE_LOG(LogTemp,Warning,TEXT("Alpha = %f"), lerpA);
+						}
+					}
+				}
+				Mesh->UpdateMeshSection_LinearColor(0, vertices, normals, UV0, VertexLinearColors, tangents, false);
+			}
+		}
+	}
+}
+
+void AMyProceduralMeshActor::CalculateVerticesPos()
+{
 	FVector2D SectionSize = FVector2D(GridSize.X / Sublevel_X, GridSize.Y / Sublevel_Y);
 
 	for (int X = 0; X < Sublevel_X + 1; X++)
@@ -175,7 +195,7 @@ TMap<FVector2d, FVector> AMyProceduralMeshActor::GetPlanePosFromXY()
 				//UE_LOG(LogTemp,Warning,TEXT("perlin = %f"), PerlinValue);
 
 				float NoiseDis_X =  NoiseDistribution_Mountain.GetRichCurve()->Eval(PerlinValue, 0);
-				Height += PerlinValue*NoiseDis_X;
+				Height += NoiseDis_X;
 			}
 			
 			if(Enable_Lake)
@@ -183,8 +203,21 @@ TMap<FVector2d, FVector> AMyProceduralMeshActor::GetPlanePosFromXY()
 				
 			}
 			
-			PosRet.Add(FVector2d(X, Y), FVector(X * SectionSize.X, Y*SectionSize.Y, Height));
+			vertices.Add(FVector(X * SectionSize.X, Y*SectionSize.Y, Height));
 		}
 	}
-	return PosRet;
+}
+
+void AMyProceduralMeshActor::InitColor()
+{
+	vertexColors.Empty();
+	VertexLinearColors.Empty();
+	for (int X = 0; X < Sublevel_X + 1; X++)
+	{
+		for (int Y = 0; Y < Sublevel_Y + 1; Y++)
+		{
+			vertexColors.Add(ColorStart.ToFColor(false));
+			VertexLinearColors.Add(ColorStart);
+		}
+	}
 }
