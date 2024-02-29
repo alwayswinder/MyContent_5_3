@@ -166,12 +166,10 @@ FVector AMyProceduralSphere::GetSpherePosFromXY(int32 X, int32 Y, FRotator Rot)
 		USimplexNoiseBPLibrary::setNoiseSeed(NoiseSeed_Mountain);
 		float PerlinValue = USimplexNoiseBPLibrary::SimplexNoise3D(PosSphere.X, PosSphere.Y, PosSphere.Z,
 			NoiseFrequency_Mountain) + 1;
-		//UE_LOG(LogTemp,Warning,TEXT("pos = %f, %f, %f"),PosSphere.X, PosSphere.Y, PosSphere.Z);
-		float NoiseDis_X =  NoiseDistribution_Mountain.GetValue(PosSphere.X).X;
-		float NoiseDis_Y =  NoiseDistribution_Mountain.GetValue(PosSphere.Y).Y;
-		float NoiseDis_Z =  NoiseDistribution_Mountain.GetValue(PosSphere.Z).Z;
+
+		float NoiseHeight =  NoiseDistribution_Mountain.GetRichCurve()->Eval(PerlinValue, 0);
 		
-		Height += PerlinValue*NoiseHeight_Mountain*NoiseDis_X*NoiseDis_Y*NoiseDis_Z;
+		Height += NoiseHeight;
 	}
 	
 	return PosSphere*GridSize*0.5f + Height*Normal;
