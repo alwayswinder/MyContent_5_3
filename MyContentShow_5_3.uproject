@@ -9,7 +9,10 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"MassSpawner"
+				"MassSpawner",
+				"MassRepresentation",
+				"Engine",
+				"MassSmartObjects"
 			]
 		}
 	],
@@ -60,6 +63,18 @@
 		},
 		{
 			"Name": "MassAI",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayBehaviors",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayBehaviorSmartObjects",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayStateTree",
 			"Enabled": true
 		}
 	]

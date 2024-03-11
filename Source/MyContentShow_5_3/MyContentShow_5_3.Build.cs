@@ -16,7 +16,20 @@ public class MyContentShow_5_3 : ModuleRules
 			"SimplexNoise",
 			"RenderCore",
 			"MassEntity",
-			"MassCommon",
+			"MassCommon",	
+			"MassNavigation",
+			"StructUtils",
+			"MassMovement",
+			"NavigationSystem",
+			"AIModule",
+			"MassAIBehavior",
+			"StateTreeModule",
+			"GameplayTags",
+			"SmartObjectsModule",
+			"MassSmartObjects",
+			"MassSignals",
+			"MassRepresentation"
+			
 		});
 
 		// Uncomment if you are using Slate UI
