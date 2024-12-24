@@ -2,7 +2,8 @@
 
 
 #include "MyBlueprintFunctionLibrary.h"
-
+#include "FileHelpers.h"
+#include "SourceControlHelpers.h"
 #include "StaticMeshComponentLODInfo.h"
 #include "MeshVertexPainter/MeshVertexPainter.h"
 
@@ -57,4 +58,16 @@ void UMyBlueprintFunctionLibrary::PaintVerticesLerpAlongAxis(UStaticMeshComponen
 #endif
 	StaticMeshComponent->MarkRenderStateDirty();
 	StaticMeshComponent->bDisallowMeshPaintPerInstance = true;
+}
+
+void UMyBlueprintFunctionLibrary::GetChangeList()
+{
+	TArray<FString> ConfigFilesToSubmit;
+	
+	TMap<FString, FSourceControlStatePtr> ProjectFileStates;
+	FEditorFileUtils::FindAllSubmittableProjectFiles(ProjectFileStates);
+	for (TMap<FString, FSourceControlStatePtr>::TConstIterator It(ProjectFileStates); It; ++It)
+	{
+		ConfigFilesToSubmit.Add(It.Key());
+	}
 }

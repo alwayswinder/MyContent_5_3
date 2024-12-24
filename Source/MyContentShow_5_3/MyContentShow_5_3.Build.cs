@@ -8,7 +8,12 @@ public class MyContentShow_5_3 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", "CoreUObject", "Engine", "InputCore",
+			"UnrealEd",
+			
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
@@ -28,7 +33,9 @@ public class MyContentShow_5_3 : ModuleRules
 			"SmartObjectsModule",
 			"MassSmartObjects",
 			"MassSignals",
-			"MassRepresentation"
+			"MassRepresentation",
+			"SourceControl",
+			"SourceControlWindows", "SourceControlWindows",
 			
 		});
 

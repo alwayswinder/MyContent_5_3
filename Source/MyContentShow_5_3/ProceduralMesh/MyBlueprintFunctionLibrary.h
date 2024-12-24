@@ -17,5 +17,7 @@ class MYCONTENTSHOW_5_3_API UMyBlueprintFunctionLibrary : public UBlueprintFunct
 	UFUNCTION(BlueprintCallable, Category = "VertexPaint")
 	static void PaintVerticesLerpAlongAxis(UStaticMeshComponent* StaticMeshComponent, const FLinearColor& StartColor,
 		const FLinearColor& EndColor, EVertexPaintAxis Axis, bool bConvertToSRGB = true);
-
+	
+	UFUNCTION(BlueprintCallable, Category = "WorldTools")
+	static void GetChangeList();
 };
