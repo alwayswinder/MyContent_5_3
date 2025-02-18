@@ -94,6 +94,10 @@
 			"Name": "FlyBoidSystem",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/97406fede440460ab25272d50ef54bf2"
+		},
+		{
+			"Name": "PCGExtendedToolkit",
+			"Enabled": true
 		}
 	]
 }
