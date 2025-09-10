@@ -107,10 +107,9 @@ FVector ULinBlueprintLibBPLibraryEd::GetCoursorPosition()
 	FHitResult Hit(ForceInit);
 	FCollisionQueryParams LineParams(SCENE_QUERY_STAT(ULinBlueprintLibBPLibraryEd), true);
 	LineParams.bTraceComplex = true;
-	if ( GWorld->LineTraceSingleByChannel(Hit, LineCheckStart, LineCheckEnd, ECC_Visibility, LineParams) ) 
+	if ( GWorld->LineTraceSingleByChannel(Hit, LineCheckStart, LineCheckEnd, ECC_Visibility, LineParams) )
 	{
 		return Hit.Location;
 	}
-	
 	return FVector();
  }
